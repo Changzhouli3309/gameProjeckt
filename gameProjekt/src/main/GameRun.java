@@ -90,10 +90,9 @@ public class GameRun {
 		case 1:
 			msg3.setText(rooms[player.getPosition()].showRoom());
 			String fb1 = "Pick: \n1-Cansel\n";
-			int n1 = 1;
-			for (GameObject go : rooms[player.getPosition()].getItems()) {
-				if (go != null) {
-					fb1 += (++n1) + "-" + go.getName() + "\n";
+			for (int i = 0; i < rooms[player.getPosition()].getItems().length; i++) {
+				if(rooms[player.getPosition()].getItems()[i]!=null) {
+					fb1+=(i+2)+"-"+rooms[player.getPosition()].getItems()[i].getName()+"\n";
 				}
 			}
 			msg4.setText(fb1);
@@ -125,10 +124,9 @@ public class GameRun {
 			// change command only when Inventory has something
 			if (showInv(msg3)) {
 				String fb2 = "Drop: \n1-Cansel\n";
-				int n2 = 1;
-				for (GameObject go : player.getItems()) {
-					if (go != null) {
-						fb2 += (++n2) + "-" + go.getName() + "\n";
+				for (int i = 0; i < player.getItems().length; i++) {
+					if(player.getItems()[i]!=null) {
+						fb2+=(i+2)+"-"+player.getItems()[i].getName()+"\n";
 					}
 				}
 				msg4.setText(fb2);
@@ -196,7 +194,7 @@ public class GameRun {
 			return true;
 		}
 	}
-	
+
 	private static void change(int input, JTextArea msg3, JTextArea msg4) {
 		Npc[] toChange = new Npc[3];
 		for (Npc npc : npcs) {
@@ -228,31 +226,47 @@ public class GameRun {
 		mode = "base";
 		msg4.setText("Commands\n1-Look around\n2-Talk\n3-Move to next room\n4-Check your item");
 	}
-	
+
 	// switch the first item with npc, can not do it when you or npc has nothing
-		private static void changeItem(Npc npc, JTextArea msg3) {
-			if (npc.getItems()[0] == null) {
-				msg3.setText(npc.getName() + " has nothing.");
-			} else if (player.getItems()[0] == null) {
-				msg3.setText("You have nothing.");
-			} else {
-				GameObject gO = npc.getItems()[0];
-				npc.removeItem(gO);
-				npc.addItem(player.getItems()[0]);
-				player.removeItem(player.getItems()[0]);
-				player.addItem(gO);
+	private static void changeItem(Npc npc, JTextArea msg3) {
+		if (npc.getItems()[0] == null) {
+			msg3.setText(npc.getName() + " has nothing.");
+		} else if (player.getItems()[0] == null) {
+			msg3.setText("You have nothing.");
+		} else {
+			GameObject gO = npc.getItems()[0];
+			npc.removeItem(gO);
+			npc.addItem(player.getItems()[0]);
+			player.removeItem(player.getItems()[0]);
+			player.addItem(gO);
 
-				msg3.setText("You switch item " + npc.getItems()[0].getName() + " and " + gO.getName() + " with "
-						+ npc.getName());
-			}
-
+			msg3.setText("You switch item " + npc.getItems()[0].getName() + " and " + gO.getName() + " with "
+					+ npc.getName());
 		}
 
-		// unlock Container when you have the right key, can unlock when the room is
-		// full.
-		private static void unlock(GameObject gO, JTextArea msg3) {
-			Container con = (Container) gO;
-			if (con.getKeyU() == 0) {
+	}
+
+	// unlock Container when you have the right key, can unlock when the room is
+	// full.
+	private static void unlock(GameObject gO, JTextArea msg3) {
+		Container con = (Container) gO;
+		if (con.getKeyU() == 0) {
+			for (GameObject go : player.getItems()) {
+				if (go != null) {
+					Key k = (Key) go;
+					if (con.getKeyU() == k.getId()) {
+						con.setLocked(false);
+					}
+				}
+
+			}
+			if (!con.isLocked()) {
+				end(msg3);
+			} else {
+				msg3.setText("You dont have key to open this door");
+			}
+		} else {
+			if (con.isLocked()) {
 				for (GameObject go : player.getItems()) {
 					if (go != null) {
 						Key k = (Key) go;
@@ -260,41 +274,25 @@ public class GameRun {
 							con.setLocked(false);
 						}
 					}
-
 				}
 				if (!con.isLocked()) {
-					end(msg3);
-				} else {
-					msg3.setText("You dont have key to open this door");
-				}
-			} else {
-				if (con.isLocked()) {
-					for (GameObject go : player.getItems()) {
-						if (go != null) {
-							Key k = (Key) go;
-							if (con.getKeyU() == k.getId()) {
-								con.setLocked(false);
-							}
-						}
-					}
-					if (!con.isLocked()) {
-						if (rooms[player.getPosition()].addItem(con.getHoldItem())) {
-							msg3.setText("You open " + con.getName() + "with a key.\n" + con.getHoldItem().getName()
-									+ " is drap to floor.");
-						} else {
-							msg3.setText("You open " + con.getName() + "with a key,\nbut the room is full try next time.");
-							con.setLocked(true);
-						}
+					if (rooms[player.getPosition()].addItem(con.getHoldItem())) {
+						msg3.setText("You open " + con.getName() + "with a key.\n" + con.getHoldItem().getName()
+								+ " is drap to floor.");
 					} else {
-						msg3.setText("You dont have key to open " + con.getName());
+						msg3.setText("You open " + con.getName() + "with a key,\nbut the room is full try next time.");
 						con.setLocked(true);
 					}
-
 				} else {
-					msg3.setText(con.getName() + " is open and empty.");
+					msg3.setText("You dont have key to open " + con.getName());
+					con.setLocked(true);
 				}
+
+			} else {
+				msg3.setText(con.getName() + " is open and empty.");
 			}
 		}
+	}
 
 	public static void movePlayer(JTextArea msg2, JTextArea msg3) {
 		String fb2 = "";
@@ -307,11 +305,11 @@ public class GameRun {
 		fb2 += rooms[newR].getName() + "\n";
 		for (Npc npc : npcs) {
 			if (npc.getPosition() == newR) {
-				fb2 += npc.getName() + " is here.\n";
+				fb2 += npc.getName() + " is here.";
 			}
 		}
 		msg2.setText(fb2);
-		msg3.setText("You move to next room.\n");
+		msg3.setText("You move to next room.");
 	}
 
 	public static boolean showInv(JTextArea msg3) {
@@ -359,7 +357,7 @@ public class GameRun {
 		} else {
 			msg3.setText(rooms[player.getPosition()].getName() + " is full.");
 		}
-	}	
+	}
 
 	// random move npc dose
 	public static void moveNpc() {

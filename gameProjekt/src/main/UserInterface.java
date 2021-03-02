@@ -35,7 +35,7 @@ public class UserInterface implements Runnable {
 		GridLayout gridLayout = new GridLayout(2, 3, 10, 10);
 		container.setLayout(gridLayout);
 
-		JTextArea msg1 = new JTextArea("The Game\nUse item to get out the room.\nYou can only have 3 item.");
+		JTextArea msg1 = new JTextArea("The Game\nUse item to get out the room.\nYou can only have 3 item.\nInput numbers for commands");
 		JTextArea msg2 = new JTextArea("Start Room\nJason is here");
 		GameRun.msg2 = msg2;
 		JTextArea msg3 = new JTextArea("feed back");
